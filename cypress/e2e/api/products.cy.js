@@ -1,0 +1,120 @@
+import { customerFactory, userFactory } from '../../support/factories/user.factory';
+import { productFactory } from '../../support/factories/product.factory';
+
+describe('API | Produtos', () => {
+  const authenticateAdmin = () => {
+    const admin = userFactory({ administrador: 'true' });
+    return cy.createUser(admin).then(() =>
+      cy.loginApi(admin).then(({ body }) => body.authorization)
+    );
+  };
+
+  it('API-08 | deve listar produtos', () => {
+    cy.listProducts().then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body.quantidade).to.be.a('number');
+      expect(response.body.produtos).to.be.an('array');
+      expect(response.body.produtos).to.have.length(response.body.quantidade);
+      if (response.body.produtos.length) {
+        expect(response.body.produtos[0]).to.include.all.keys(
+          'nome', 'preco', 'descricao', 'quantidade', '_id'
+        );
+      }
+    });
+  });
+
+  it('API-09 | deve consultar um produto pelo ID', () => {
+    cy.listProducts().then(({ body }) => {
+      expect(body.produtos.length).to.be.greaterThan(0);
+      const product = body.produtos[0];
+
+      cy.getProduct(product._id).then((response) => {
+        expect(response.status).to.eq(200);
+        expect(response.body).to.deep.include({
+          _id: product._id,
+          nome: product.nome,
+          descricao: product.descricao,
+        });
+      });
+    });
+  });
+
+  it('API-10 | deve bloquear criação de produto para usuário não administrador', () => {
+    const customer = customerFactory();
+    const product = productFactory();
+
+    cy.createUser(customer).then(() => {
+      cy.loginApi(customer).then(({ body }) => {
+        cy.createProduct(product, body.authorization).then((response) => {
+          expect(response.status).to.eq(403);
+          expect(response.body.message).to.eq('Rota exclusiva para administradores');
+        });
+      });
+    });
+  });
+
+  it('API-11 | deve cadastrar um produto como administrador', () => {
+    const product = productFactory();
+
+    authenticateAdmin().then((token) => {
+      cy.createProduct(product, token).then((response) => {
+        expect(response.status).to.eq(201);
+        expect(response.body).to.include({ message: 'Cadastro realizado com sucesso' });
+        expect(response.body._id).to.be.a('string').and.not.be.empty;
+
+        cy.getProduct(response.body._id).then((getResponse) => {
+          expect(getResponse.status).to.eq(200);
+          expect(getResponse.body.nome).to.eq(product.nome);
+        });
+      });
+    });
+  });
+
+  it('API-12 | deve atualizar um produto criado pela própria suíte', () => {
+    const product = productFactory();
+    const updatedProduct = { ...product, nome: `${product.nome} Updated`, preco: 299 };
+
+    authenticateAdmin().then((token) => {
+      cy.createProduct(product, token).then(({ body }) => {
+        cy.apiRequest({
+          method: 'PUT',
+          path: `/produtos/${body._id}`,
+          body: updatedProduct,
+          headers: { Authorization: token },
+          failOnStatusCode: false,
+        }).then((response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body.message).to.eq('Registro alterado com sucesso');
+
+          cy.getProduct(body._id).then((getResponse) => {
+            expect(getResponse.status).to.eq(200);
+            expect(getResponse.body.nome).to.eq(updatedProduct.nome);
+            expect(Number(getResponse.body.preco)).to.eq(updatedProduct.preco);
+          });
+        });
+      });
+    });
+  });
+
+  it('API-13 | deve excluir um produto criado pela própria suíte', () => {
+    const product = productFactory();
+
+    authenticateAdmin().then((token) => {
+      cy.createProduct(product, token).then(({ body }) => {
+        cy.apiRequest({
+          method: 'DELETE',
+          path: `/produtos/${body._id}`,
+          headers: { Authorization: token },
+          failOnStatusCode: false,
+        }).then((response) => {
+          expect(response.status).to.eq(200);
+          expect(response.body.message).to.eq('Registro excluído com sucesso');
+
+          cy.getProduct(body._id).then((getResponse) => {
+            expect(getResponse.status).to.eq(400);
+          });
+        });
+      });
+    });
+  });
+});
