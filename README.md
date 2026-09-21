@@ -6,9 +6,11 @@ Automação de testes **E2E de frontend** e **API** utilizando **Cypress + JavaS
 
 O projeto foi estruturado com foco em independência dos testes, massa de dados dinâmica, assertions orientadas ao comportamento, reutilização, estabilidade e execução em CI.
 
+> **Cypress 16:** URLs de ambiente são tratadas como configuração pública via `Cypress.expose()`. Segredos e credenciais não devem ser armazenados em `expose`.
+
 ## Stack
 
-- Node.js 20+
+- Node.js 22+
 - JavaScript
 - Cypress 16
 - GitHub Actions
@@ -174,11 +176,11 @@ Pipeline:
 ```text
 Checkout
   ↓
-Node.js 20
+Node.js 22
   ↓
 npm ci
   ↓
-Cypress headless
+Cypress headless (Chrome)
   ↓
 Reports / screenshots
   ↓

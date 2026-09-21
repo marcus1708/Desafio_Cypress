@@ -5,11 +5,11 @@
   "main": "cypress.config.js",
   "scripts": {
     "cy:open": "cypress open",
-    "cy:run": "cypress run",
-    "cy:run:api": "cypress run --spec 'cypress/e2e/api/**/*.cy.js'",
-    "cy:run:e2e": "cypress run --spec 'cypress/e2e/frontend/**/*.cy.js'",
-    "test": "cypress run",
-    "test:smoke": "cypress run --spec 'cypress/e2e/frontend/authentication.cy.js,cypress/e2e/api/authentication.cy.js'"
+    "cy:run": "cypress run --browser chrome",
+    "cy:run:api": "cypress run --browser chrome --spec 'cypress/e2e/api/**/*.cy.js'",
+    "cy:run:e2e": "cypress run --browser chrome --spec 'cypress/e2e/frontend/**/*.cy.js'",
+    "test": "cypress run --browser chrome",
+    "test:smoke": "cypress run --browser chrome --spec 'cypress/e2e/frontend/authentication.cy.js,cypress/e2e/api/authentication.cy.js'"
   },
   "author": "Marcus Vinicius B de Souza",
   "license": "MIT",

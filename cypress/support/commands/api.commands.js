@@ -1,4 +1,4 @@
-const apiUrl = () => Cypress.env('apiUrl');
+const apiUrl = () => Cypress.expose('apiUrl');
 
 Cypress.Commands.add('apiRequest', ({ method, path, body, headers, failOnStatusCode = true }) =>
   cy.request({

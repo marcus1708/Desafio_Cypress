@@ -1,6 +1,9 @@
 const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
+  expose: {
+    apiUrl: process.env.API_URL || 'https://serverest.dev',
+  },
   video: false,
   screenshotOnRunFailure: true,
   retries: {
@@ -22,9 +25,6 @@ module.exports = defineConfig({
   },
   e2e: {
     baseUrl: process.env.CYPRESS_BASE_URL || 'https://front.serverest.dev',
-    env: {
-      apiUrl: process.env.API_URL || 'https://serverest.dev',
-    },
     supportFile: 'cypress/support/e2e.js',
     specPattern: 'cypress/e2e/**/*.cy.js',
     setupNodeEvents(on, config) {

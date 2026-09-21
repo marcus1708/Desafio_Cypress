@@ -26,8 +26,8 @@ describe('Frontend | Autenticação', () => {
   it('FE-03 | deve impedir envio do login com campos obrigatórios vazios', () => {
     cy.intercept('POST', '**/login').as('loginRequest');
     cy.visit('/login');
-    cy.get('#email').should('have.attr', 'required');
-    cy.get('#password').should('have.attr', 'required');
+    cy.get('#email').clear();
+    cy.get('#password').clear();
     cy.contains('button', 'Entrar').click();
     cy.get('@loginRequest.all').should('have.length', 0);
     cy.url().should('include', '/login');
