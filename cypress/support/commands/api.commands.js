@@ -1,54 +1,123 @@
 const apiUrl = () => Cypress.expose('apiUrl');
 
-Cypress.Commands.add('apiRequest', ({ method, path, body, headers, failOnStatusCode = true }) =>
-  cy.request({
+const apiRequest = ({
+  method,
+  path,
+  body,
+  headers,
+  failOnStatusCode = true,
+}) => {
+  const request = {
     method,
     url: `${apiUrl()}${path}`,
-    body,
-    headers,
     failOnStatusCode,
-  })
-);
+  };
+
+  if (body !== undefined) {
+    request.body = body;
+  }
+
+  if (headers !== undefined) {
+    request.headers = headers;
+  }
+
+  return cy.api(request);
+};
+
+Cypress.Commands.add('apiRequest', apiRequest);
 
 Cypress.Commands.add('createUser', (user, options = {}) =>
-  cy.apiRequest({
+  cy.api({
     method: 'POST',
-    path: '/usuarios',
+    url: `${apiUrl()}/usuarios`,
     body: user,
     failOnStatusCode: options.failOnStatusCode ?? true,
   })
 );
 
-Cypress.Commands.add('loginApi', (user) =>
-  cy.apiRequest({ method: 'POST', path: '/login', body: user, failOnStatusCode: false })
+Cypress.Commands.add('loginApi', ({ email, password }) =>
+  cy.api({
+    method: 'POST',
+    url: `${apiUrl()}/login`,
+    body: {
+      email,
+      password,
+    },
+    failOnStatusCode: false,
+  })
 );
 
 Cypress.Commands.add('getUser', (id) =>
-  cy.apiRequest({ method: 'GET', path: `/usuarios/${id}`, failOnStatusCode: false })
+  cy.api({
+    method: 'GET',
+    url: `${apiUrl()}/usuarios/${id}`,
+    failOnStatusCode: false,
+  })
 );
 
 Cypress.Commands.add('updateUser', (id, user) =>
-  cy.apiRequest({ method: 'PUT', path: `/usuarios/${id}`, body: user, failOnStatusCode: false })
+  cy.api({
+    method: 'PUT',
+    url: `${apiUrl()}/usuarios/${id}`,
+    body: user,
+    failOnStatusCode: false,
+  })
 );
 
 Cypress.Commands.add('deleteUser', (id) =>
-  cy.apiRequest({ method: 'DELETE', path: `/usuarios/${id}`, failOnStatusCode: false })
+  cy.api({
+    method: 'DELETE',
+    url: `${apiUrl()}/usuarios/${id}`,
+    failOnStatusCode: false,
+  })
 );
 
 Cypress.Commands.add('listProducts', () =>
-  cy.apiRequest({ method: 'GET', path: '/produtos' })
+  cy.api({
+    method: 'GET',
+    url: `${apiUrl()}/produtos`,
+  })
 );
 
 Cypress.Commands.add('getProduct', (id) =>
-  cy.apiRequest({ method: 'GET', path: `/produtos/${id}`, failOnStatusCode: false })
+  cy.api({
+    method: 'GET',
+    url: `${apiUrl()}/produtos/${id}`,
+    failOnStatusCode: false,
+  })
 );
 
 Cypress.Commands.add('createProduct', (product, token) =>
-  cy.apiRequest({
+  cy.api({
     method: 'POST',
-    path: '/produtos',
+    url: `${apiUrl()}/produtos`,
     body: product,
-    headers: { Authorization: token },
+    headers: {
+      Authorization: token,
+    },
+    failOnStatusCode: false,
+  })
+);
+
+Cypress.Commands.add('updateProduct', (id, product, token) =>
+  cy.api({
+    method: 'PUT',
+    url: `${apiUrl()}/produtos/${id}`,
+    body: product,
+    headers: {
+      Authorization: token,
+    },
+    failOnStatusCode: false,
+  })
+);
+
+Cypress.Commands.add('deleteProduct', (id, token) =>
+  cy.api({
+    method: 'DELETE',
+    url: `${apiUrl()}/produtos/${id}`,
+    headers: {
+      Authorization: token,
+    },
     failOnStatusCode: false,
   })
 );

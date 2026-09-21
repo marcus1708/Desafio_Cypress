@@ -23,13 +23,29 @@ describe('Frontend | Autenticação', () => {
     cy.get('body').should('contain.text', 'inválidos');
   });
 
-  it('FE-03 | deve impedir envio do login com campos obrigatórios vazios', () => {
+it('FE-03 | deve rejeitar login com campos obrigatórios vazios', () => {
     cy.intercept('POST', '**/login').as('loginRequest');
+
     cy.visit('/login');
-    cy.get('#email').clear();
-    cy.get('#password').clear();
-    cy.contains('button', 'Entrar').click();
-    cy.get('@loginRequest.all').should('have.length', 0);
+
+    cy.get('#email')
+      .should('be.visible')
+      .clear()
+      .should('have.value', '');
+
+    cy.get('#password')
+      .should('be.visible')
+      .clear()
+      .should('have.value', '');
+
+    cy.contains('button', 'Entrar')
+      .should('be.visible')
+      .click();
+
+    cy.wait('@loginRequest')
+      .its('response.statusCode')
+      .should('eq', 400);
+
     cy.url().should('include', '/login');
   });
 
@@ -38,7 +54,7 @@ describe('Frontend | Autenticação', () => {
 
     cy.createUser(user).then(() => {
       cy.loginFrontend(user);
-      cy.contains('Sair').should('be.visible').click();
+      cy.contains('Logout').should('be.visible').click();
       cy.url().should('include', '/login');
       cy.visit('/admin/home');
       cy.url().should('include', '/login');

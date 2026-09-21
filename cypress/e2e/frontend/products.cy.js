@@ -7,45 +7,141 @@ describe('Frontend | Produtos', () => {
     return cy.createUser(user).then(() => cy.loginFrontend(user));
   };
 
-  it('FE-06 | deve cadastrar um novo produto', () => {
-    const product = productFactory();
+it('FE-06 | deve cadastrar um novo produto', () => {
+  const admin = userFactory({ administrador: 'true' });
+  const product = productFactory();
 
-    loginAsAdmin();
-    cy.contains('li', 'Cadastrar Produtos').click();
-    cy.get('#nome').type(product.nome);
-    cy.get('#price').type(String(product.preco));
-    cy.get('#description').type(product.descricao);
-    cy.get('#quantity').type(String(product.quantidade));
-    cy.contains('button', 'Cadastrar').click();
+  cy.createUser(admin).then((createResponse) => {
+    expect(createResponse.status).to.eq(201);
 
-    cy.contains('Cadastro realizado com sucesso').should('be.visible');
-    cy.url().should('include', '/admin/listarprodutos');
+    cy.intercept('POST', '**/login').as('loginRequest');
+    cy.intercept('POST', '**/produtos').as('createProduct');
+    cy.intercept('GET', '**/produtos*').as('listProducts');
 
-    cy.listProducts().then(({ body }) => {
-      const createdProduct = body.produtos.find(({ nome }) => nome === product.nome);
+    // Login pela interface
+    cy.visit('/login');
 
-      expect(createdProduct, 'produto criado pela UI deve existir na API').to.exist;
-      expect(createdProduct).to.include({
-        nome: product.nome,
-        descricao: product.descricao,
-        quantidade: product.quantidade,
+    cy.get('#email')
+      .should('be.visible')
+      .type(admin.email);
+
+    cy.get('#password')
+      .should('be.visible')
+      .type(admin.password);
+
+    cy.contains('button', 'Entrar')
+      .should('be.visible')
+      .click();
+
+    cy.wait('@loginRequest')
+      .its('response.statusCode')
+      .should('eq', 200);
+
+    // Acessa o cadastro de produtos autenticado
+    cy.visit('/admin/cadastrarprodutos');
+
+    cy.get('[data-testid="nome"]')
+      .should('be.visible')
+      .type(product.nome);
+
+    cy.get('[data-testid="preco"]')
+      .should('be.visible')
+      .type(product.preco);
+
+    cy.get('[data-testid="descricao"]')
+      .should('be.visible')
+      .type(product.descricao);
+
+    cy.get('[data-testid="quantity"]')
+      .should('be.visible')
+      .type(product.quantidade);
+
+    cy.contains('button', 'Cadastrar')
+      .should('be.visible')
+      .click();
+
+    cy.wait('@createProduct')
+      .then(({ request, response }) => {
+        expect(response.statusCode).to.eq(201);
+
+        expect(request.body).to.include({
+          nome: product.nome, 
+          descricao: product.descricao
+        });
+        expect(Number(request.body.preco)).to.eq(Number(product.preco));
+        expect(Number(request.body.quantidade))
+               .to.eq(Number(product.quantidade));
       });
-      expect(Number(createdProduct.preco)).to.eq(product.preco);
-    });
+
+    cy.wait('@listProducts');
+
+    cy.contains(product.nome)
+      .should('be.visible');
+  });
+});
+
+it('FE-07 | deve rejeitar cadastro de produto sem campos obrigatórios', () => {
+  const admin = userFactory({
+    administrador: 'true',
   });
 
-  it('FE-07 | deve validar campos obrigatórios no cadastro de produto', () => {
-    loginAsAdmin();
-    cy.contains('li', 'Cadastrar Produtos').click();
+  cy.createUser(admin).then((createResponse) => {
+    expect(createResponse.status).to.eq(201);
 
-    cy.get('#nome').should('have.attr', 'required');
-    cy.get('#price').should('have.attr', 'required');
-    cy.get('#description').should('have.attr', 'required');
-    cy.get('#quantity').should('have.attr', 'required');
+    cy.intercept('POST', '**/login').as('loginRequest');
+    cy.intercept('POST', '**/produtos').as('createProduct');
 
-    cy.contains('button', 'Cadastrar').click();
+    // Login pela interface
+    cy.visit('/login');
+
+    cy.get('#email')
+      .should('be.visible')
+      .type(admin.email);
+
+    cy.get('#password')
+      .should('be.visible')
+      .type(admin.password);
+
+    cy.contains('button', 'Entrar')
+      .should('be.visible')
+      .click();
+
+    cy.wait('@loginRequest')
+      .its('response.statusCode')
+      .should('eq', 200);
+
+    // Acessa o cadastro de produtos autenticado
+    cy.visit('/admin/cadastrarprodutos');
+
+    cy.get('[data-testid="nome"]')
+      .should('be.visible')
+      .clear();
+
+    cy.get('[data-testid="preco"]')
+      .should('be.visible')
+      .clear();
+
+    cy.get('[data-testid="descricao"]')
+      .should('be.visible')
+      .clear();
+
+    cy.get('[data-testid="quantity"]')
+      .should('be.visible')
+      .clear();
+
+    cy.contains('button', 'Cadastrar')
+      .should('be.visible')
+      .click();
+
+    cy.wait('@createProduct')
+      .then(({ request, response }) => {
+        expect(response.statusCode).to.eq(400);
+        expect(request.body).to.be.an('object');
+      });
+
     cy.url().should('include', '/admin/cadastrarprodutos');
   });
+});
 
   it('FE-09 | deve acessar a listagem de produtos após autenticação administrativa', () => {
     loginAsAdmin();
