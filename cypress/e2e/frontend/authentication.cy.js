@@ -1,11 +1,17 @@
+import { usersClient } from '../../support/clients/users.client';
 import { userFactory } from '../../support/factories/user.factory';
 
 describe('Frontend | Autenticação', () => {
   it('FE-01 | deve realizar login com credenciais válidas', () => {
     const user = userFactory();
 
-    cy.createUser(user).then(() => {
-      cy.loginFrontend(user);
+    usersClient.create(user).then(() => {
+      cy.visit('/login');
+
+      cy.get('[data-testid="email"]').type(user.email);
+      cy.get('[data-testid="senha"]').type(user.password);
+      cy.contains('button', 'Entrar').click();
+
       cy.url().should('include', '/admin/home');
       cy.contains('Bem Vindo').should('be.visible');
     });
@@ -13,27 +19,35 @@ describe('Frontend | Autenticação', () => {
 
   it('FE-02 | deve exibir erro ao informar credenciais inválidas', () => {
     cy.intercept('POST', '**/login').as('loginRequest');
+
     cy.visit('/login');
-    cy.get('#email').type(`invalid.${Date.now()}@example.com`);
-    cy.get('#password').type('SenhaInvalida@999');
+
+    cy.get('[data-testid="email"]').type(
+      `invalid.${Date.now()}@example.com`
+    );
+    cy.get('[data-testid="senha"]').type('SenhaInvalida@999');
+
     cy.contains('button', 'Entrar').click();
 
-    cy.wait('@loginRequest').its('response.statusCode').should('eq', 401);
+    cy.wait('@loginRequest')
+      .its('response.statusCode')
+      .should('eq', 401);
+
     cy.url().should('include', '/login');
     cy.get('body').should('contain.text', 'inválidos');
   });
 
-it('FE-03 | deve rejeitar login com campos obrigatórios vazios', () => {
+  it('FE-03 | deve rejeitar login com campos obrigatórios vazios', () => {
     cy.intercept('POST', '**/login').as('loginRequest');
 
     cy.visit('/login');
 
-    cy.get('#email')
+    cy.get('[data-testid="email"]')
       .should('be.visible')
       .clear()
       .should('have.value', '');
 
-    cy.get('#password')
+    cy.get('[data-testid="senha"]')
       .should('be.visible')
       .clear()
       .should('have.value', '');
@@ -52,11 +66,23 @@ it('FE-03 | deve rejeitar login com campos obrigatórios vazios', () => {
   it('FE-08 | deve encerrar a sessão pelo logout', () => {
     const user = userFactory();
 
-    cy.createUser(user).then(() => {
-      cy.loginFrontend(user);
-      cy.contains('Logout').should('be.visible').click();
+    usersClient.create(user).then(() => {
+      cy.visit('/login');
+
+      cy.get('[data-testid="email"]').type(user.email);
+      cy.get('[data-testid="senha"]').type(user.password);
+      cy.contains('button', 'Entrar').click();
+
+      cy.url().should('include', '/admin/home');
+
+      cy.contains('Logout')
+        .should('be.visible')
+        .click();
+
       cy.url().should('include', '/login');
+
       cy.visit('/admin/home');
+
       cy.url().should('include', '/login');
     });
   });

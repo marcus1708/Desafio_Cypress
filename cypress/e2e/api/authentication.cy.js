@@ -1,13 +1,15 @@
+import { authClient } from '../../support/clients/auth.client';
+import { usersClient } from '../../support/clients/users.client';
 import { userFactory } from '../../support/factories/user.factory';
 
 describe('API | Autenticação', () => {
   it('API-01 | deve realizar login com credenciais válidas', () => {
     const user = userFactory();
 
-    cy.createUser(user).then((createResponse) => {
+    usersClient.create(user).then((createResponse) => {
       expect(createResponse.status).to.eq(201);
 
-      cy.loginApi(user).then((response) => {
+      authClient.login(user.email, user.password).then((response) => {
         expect(response.status).to.eq(200);
 
         expect(response.body).to.include({
@@ -24,18 +26,17 @@ describe('API | Autenticação', () => {
   it('API-02 | deve rejeitar login com senha inválida', () => {
     const user = userFactory();
 
-    cy.createUser(user).then((createResponse) => {
+    usersClient.create(user).then((createResponse) => {
       expect(createResponse.status).to.eq(201);
 
-      cy.loginApi({
-        email: user.email,
-        password: 'SenhaInvalida@999',
-      }).then((response) => {
-        expect(response.status).to.eq(401);
-        expect(response.body.message)
-          .to.be.a('string')
-          .and.not.be.empty;
-      });
+      authClient
+        .login(user.email, 'SenhaInvalida@999')
+        .then((response) => {
+          expect(response.status).to.eq(401);
+          expect(response.body.message)
+            .to.be.a('string')
+            .and.not.be.empty;
+        });
     });
   });
 });

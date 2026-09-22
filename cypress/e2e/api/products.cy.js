@@ -1,34 +1,49 @@
-import { customerFactory, userFactory } from '../../support/factories/user.factory';
+import { authClient } from '../../support/clients/auth.client';
+import { productsClient } from '../../support/clients/products.client';
+import { usersClient } from '../../support/clients/users.client';
+import {
+  customerFactory,
+  userFactory,
+} from '../../support/factories/user.factory';
 import { productFactory } from '../../support/factories/product.factory';
 
 describe('API | Produtos', () => {
   const authenticateAdmin = () => {
     const admin = userFactory({ administrador: 'true' });
-    return cy.createUser(admin).then(() =>
-      cy.loginApi(admin).then(({ body }) => body.authorization)
-    );
+
+    return usersClient.create(admin).then(() => {
+      return authClient.login(admin.email, admin.password);
+    }).then(({ body }) => body.authorization);
   };
 
   it('API-08 | deve listar produtos', () => {
-    cy.listProducts().then((response) => {
+    productsClient.list().then((response) => {
       expect(response.status).to.eq(200);
       expect(response.body.quantidade).to.be.a('number');
       expect(response.body.produtos).to.be.an('array');
-      expect(response.body.produtos).to.have.length(response.body.quantidade);
+      expect(response.body.produtos).to.have.length(
+        response.body.quantidade
+      );
+
       if (response.body.produtos.length) {
         expect(response.body.produtos[0]).to.include.all.keys(
-          'nome', 'preco', 'descricao', 'quantidade', '_id'
+          'nome',
+          'preco',
+          'descricao',
+          'quantidade',
+          '_id'
         );
       }
     });
   });
 
   it('API-09 | deve consultar um produto pelo ID', () => {
-    cy.listProducts().then(({ body }) => {
+    productsClient.list().then(({ body }) => {
       expect(body.produtos.length).to.be.greaterThan(0);
+
       const product = body.produtos[0];
 
-      cy.getProduct(product._id).then((response) => {
+      productsClient.getById(product._id).then((response) => {
         expect(response.status).to.eq(200);
         expect(response.body).to.deep.include({
           _id: product._id,
@@ -43,12 +58,16 @@ describe('API | Produtos', () => {
     const customer = customerFactory();
     const product = productFactory();
 
-    cy.createUser(customer).then(() => {
-      cy.loginApi(customer).then(({ body }) => {
-        cy.createProduct(product, body.authorization).then((response) => {
-          expect(response.status).to.eq(403);
-          expect(response.body.message).to.eq('Rota exclusiva para administradores');
-        });
+    usersClient.create(customer).then(() => {
+      authClient.login(customer.email, customer.password).then(({ body }) => {
+        productsClient
+          .create(product, body.authorization)
+          .then((response) => {
+            expect(response.status).to.eq(403);
+            expect(response.body.message).to.eq(
+              'Rota exclusiva para administradores'
+            );
+          });
       });
     });
   });
@@ -57,12 +76,14 @@ describe('API | Produtos', () => {
     const product = productFactory();
 
     authenticateAdmin().then((token) => {
-      cy.createProduct(product, token).then((response) => {
+      productsClient.create(product, token).then((response) => {
         expect(response.status).to.eq(201);
-        expect(response.body).to.include({ message: 'Cadastro realizado com sucesso' });
+        expect(response.body).to.include({
+          message: 'Cadastro realizado com sucesso',
+        });
         expect(response.body._id).to.be.a('string').and.not.be.empty;
 
-        cy.getProduct(response.body._id).then((getResponse) => {
+        productsClient.getById(response.body._id).then((getResponse) => {
           expect(getResponse.status).to.eq(200);
           expect(getResponse.body.nome).to.eq(product.nome);
         });
@@ -72,26 +93,31 @@ describe('API | Produtos', () => {
 
   it('API-12 | deve atualizar um produto criado pela própria suíte', () => {
     const product = productFactory();
-    const updatedProduct = { ...product, nome: `${product.nome} Updated`, preco: 299 };
+
+    const updatedProduct = {
+      ...product,
+      nome: `${product.nome} Updated`,
+      preco: 299,
+    };
 
     authenticateAdmin().then((token) => {
-      cy.createProduct(product, token).then(({ body }) => {
-        cy.apiRequest({
-          method: 'PUT',
-          path: `/produtos/${body._id}`,
-          body: updatedProduct,
-          headers: { Authorization: token },
-          failOnStatusCode: false,
-        }).then((response) => {
-          expect(response.status).to.eq(200);
-          expect(response.body.message).to.eq('Registro alterado com sucesso');
+      productsClient.create(product, token).then(({ body }) => {
+        productsClient
+          .update(body._id, updatedProduct, token)
+          .then((response) => {
+            expect(response.status).to.eq(200);
+            expect(response.body.message).to.eq(
+              'Registro alterado com sucesso'
+            );
 
-          cy.getProduct(body._id).then((getResponse) => {
-            expect(getResponse.status).to.eq(200);
-            expect(getResponse.body.nome).to.eq(updatedProduct.nome);
-            expect(Number(getResponse.body.preco)).to.eq(updatedProduct.preco);
+            productsClient.getById(body._id).then((getResponse) => {
+              expect(getResponse.status).to.eq(200);
+              expect(getResponse.body.nome).to.eq(updatedProduct.nome);
+              expect(Number(getResponse.body.preco)).to.eq(
+                updatedProduct.preco
+              );
+            });
           });
-        });
       });
     });
   });
@@ -100,17 +126,14 @@ describe('API | Produtos', () => {
     const product = productFactory();
 
     authenticateAdmin().then((token) => {
-      cy.createProduct(product, token).then(({ body }) => {
-        cy.apiRequest({
-          method: 'DELETE',
-          path: `/produtos/${body._id}`,
-          headers: { Authorization: token },
-          failOnStatusCode: false,
-        }).then((response) => {
+      productsClient.create(product, token).then(({ body }) => {
+        productsClient.delete(body._id, token).then((response) => {
           expect(response.status).to.eq(200);
-          expect(response.body.message).to.eq('Registro excluído com sucesso');
+          expect(response.body.message).to.eq(
+            'Registro excluído com sucesso'
+          );
 
-          cy.getProduct(body._id).then((getResponse) => {
+          productsClient.getById(body._id).then((getResponse) => {
             expect(getResponse.status).to.eq(400);
           });
         });
