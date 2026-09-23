@@ -1,32 +1,74 @@
 # Test Strategy
 
-## Objective
+## Objetivo
 
-Demonstrate a maintainable automation baseline for the ServeRest application, covering the requested UI and API happy paths while keeping the scenarios independent and suitable for CI execution.
+A suíte existe para reduzir risco de regressão nos fluxos críticos do ServeRest e demonstrar uma estratégia de qualidade que vai além da execução de happy paths.
 
-## Coverage
+## Riscos priorizados
 
-- UI authentication
-- UI user registration
-- UI product registration
-- API user registration
-- API authentication
-- API product listing
+- autenticação incorreta ou indisponível;
+- autorização inadequada entre administrador e usuário comum;
+- cadastro, atualização e exclusão de dados com comportamento incorreto;
+- aceitação de payloads inválidos;
+- quebra do contrato das respostas da API;
+- duplicidade de dados;
+- perda de isolamento entre massas;
+- regressão nos fluxos críticos do frontend;
+- execução não reproduzível fora da máquina do QA.
 
-## Automation principles
+## Estratégia por camada
 
-1. **Independence:** every test prepares its own state when required.
-2. **Deterministic data:** dynamic values avoid collisions in the shared environment.
-3. **Stable synchronization:** network aliases are used when the business action depends on an asynchronous API call.
-4. **Business assertions:** tests validate outcomes, not only that an element was clicked.
-5. **Layer separation:** API actions, UI actions, selectors and data generation have separate responsibilities.
-6. **Fast setup:** API is used to prepare authenticated UI state instead of chaining UI flows that belong to another test concern.
-7. **CI readiness:** the suite can run headlessly and exposes reports/artifacts for investigation.
+### API
 
-## Scope decision
+A maior parte da cobertura está na API porque ela oferece feedback rápido e permite validar regras, autorização, payloads e contratos com menor acoplamento à UI.
 
-The challenge explicitly requests three frontend and three API scenarios. The suite keeps this scope focused rather than adding negative cases solely to increase test count. Additional coverage can be introduced later based on product risk, such as authorization rules, validation messages, duplicate records and product lifecycle operations.
+### Frontend
 
-## Known risk
+A camada E2E cobre os fluxos que dependem da integração entre tela, navegação, autenticação e chamadas de API.
 
-The public ServeRest environment is shared and can be unavailable or changed independently of this repository. Such environmental failures should be distinguished from functional regressions in the application under test.
+### Qualidade / contratos
+
+`quality.cy.js` concentra cenários negativos, boundary, autenticação/autorização, isolamento, cleanup e contratos.
+
+## Test pyramid
+
+```text
+             UI / E2E
+          poucos cenários
+                ▲
+                │
+        API / Contract
+      maior cobertura
+                ▲
+                │
+        Unit / component
+       fora do escopo atual
+```
+
+O projeto não possui código de produção do ServeRest; por isso testes unitários/componentes não fazem parte deste desafio.
+
+## Massa e isolamento
+
+Factories criam usuários e produtos com identificadores únicos. A API é usada para preparar pré-condições quando isso reduz acoplamento da UI.
+
+O compartilhamento de uma pré-condição em `before()` é permitido apenas quando o estado não é alterado pelo cenário. Cenários mutáveis devem criar a própria massa.
+
+## Contratos
+
+As respostas críticas possuem definições de schema em `cypress/support/schemas`. O validador local implementa o subconjunto de regras necessário para este projeto: tipos, propriedades obrigatórias, propriedades aninhadas, arrays, enum e tamanho mínimo de strings.
+
+## Ambiente
+
+O ambiente público do ServeRest é compartilhado. A suíte reduz chamadas desnecessárias e aplica `API_MIN_INTERVAL_MS` para diminuir o risco de `429` associado a comportamento semelhante a teste de carga.
+
+Isso é uma mitigação de ambiente, não uma regra funcional do produto.
+
+## Critério de qualidade
+
+Uma execução é considerada aprovada quando:
+
+1. instalação limpa com `npm ci` funciona;
+2. os cenários críticos executam sem falhas funcionais;
+3. não há dependência de ordem entre testes;
+4. relatórios e screenshots são produzidos quando aplicável;
+5. o pipeline consegue reproduzir a execução fora da máquina local.

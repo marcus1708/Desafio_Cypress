@@ -1,11 +1,10 @@
 const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({
-expose: {
-  apiUrl: process.env.API_URL || 'https://serverest.dev',
-  adminEmail: process.env.ADMIN_EMAIL,
-  adminPassword: process.env.ADMIN_PASSWORD,
-},
+  expose: {
+    apiUrl: process.env.API_URL || 'https://serverest.dev',
+    apiMinIntervalMs: Number(process.env.API_MIN_INTERVAL_MS || 1500),
+  },
   video: false,
   screenshotOnRunFailure: true,
   retries: {

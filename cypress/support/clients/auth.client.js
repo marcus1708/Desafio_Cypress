@@ -3,10 +3,7 @@ export const authClient = {
     return cy.apiRequest({
       method: 'POST',
       path: '/login',
-      body: {
-        email,
-        password,
-      },
+      body: { email, password },
       failOnStatusCode: false,
     });
   },

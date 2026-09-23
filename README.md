@@ -2,85 +2,40 @@
 
 [![Cypress Tests](https://github.com/marcus1708/Desafio_Cypress/actions/workflows/cypress.yml/badge.svg)](https://github.com/marcus1708/Desafio_Cypress/actions/workflows/cypress.yml)
 
-Automação de testes **E2E de frontend e API** utilizando **Cypress + JavaScript**, desenvolvida para o desafio técnico de QA.
+Automação **E2E de frontend + API** com **Cypress + JavaScript**, estruturada com foco em Quality Engineering: cobertura orientada a risco, cenários negativos, autenticação/autorização, contratos, massa dinâmica, isolamento, evidências e execução em CI/CD.
 
-O projeto foi estruturado com foco em:
+## O que este projeto demonstra
 
-- independência entre cenários;
-- massa de dados dinâmica;
-- cobertura de fluxos positivos e negativos;
-- assertions orientadas ao comportamento;
-- reutilização de código;
-- sincronização determinística;
-- separação de responsabilidades;
-- execução automatizada em CI;
-- arquitetura organizada e escalável.
+A suíte foi construída para responder quatro perguntas de qualidade:
 
-> **Status da suíte:** 22 cenários automatizados validados com sucesso localmente.
-
----
+- **Quais riscos estou cobrindo?** → `docs/risk-matrix.md`
+- **Por que escolhi esses cenários?** → `docs/test-strategy.md`
+- **Como a suíte escala?** → `docs/architecture.md`
+- **Como ela entra no processo de entrega?** → `docs/ci-strategy.md` e GitHub Actions
 
 ## Stack
 
-- **Node.js 22+**
-- **JavaScript**
-- **Cypress 16**
-- **cypress-plugin-api**
-- **GitHub Actions**
-- **ServeRest Frontend**
-- **ServeRest REST API**
-- **Mochawesome**
-- **JUnit**
+- Node.js 22+
+- JavaScript
+- Cypress 16
+- GitHub Actions
+- ServeRest Frontend
+- ServeRest REST API
+- Mochawesome
+- JUnit
 
----
+> **Cypress 16:** URLs públicas de ambiente são configuradas por `Cypress.expose()`. Segredos não devem ser armazenados nessa configuração.
 
 ## Aplicações sob teste
 
-| Camada | Aplicação |
-|---|---|
-| Frontend | https://front.serverest.dev/ |
-| API / Swagger | https://serverest.dev/ |
+- Frontend: `https://front.serverest.dev/`
+- API: `https://serverest.dev/`
 
----
+## Cobertura
 
-# Estratégia de testes
+**34 cenários automatizados: 9 frontend + 25 API.**
 
-A suíte foi dividida em duas camadas principais.
-
-## Frontend
-
-Os testes E2E validam os principais fluxos de negócio através da interface, incluindo:
-
-- autenticação;
-- cadastro de usuários;
-- cadastro de produtos;
-- validações;
-- logout;
-- navegação;
-- controle de acesso.
-
-## API
-
-Os testes de API validam diretamente os comportamentos e contratos da aplicação, incluindo:
-
-- autenticação;
-- CRUD de usuários;
-- CRUD de produtos;
-- consultas;
-- duplicidade de dados;
-- autorização;
-- códigos HTTP;
-- conteúdo das respostas.
-
-A API também é utilizada para **preparar estados de teste quando isso reduz o acoplamento desnecessário da UI**, mantendo no frontend a validação do comportamento que pertence à interface.
-
----
-
-# Cobertura
-
-A suíte foi ampliada para além dos cenários mínimos do desafio, cobrindo fluxos positivos, negativos, validações, autorização e operações CRUD.
-
-## Frontend — 9 cenários
+### Frontend — 9 cenários
 
 | ID | Cenário | Tipo |
 |---|---|---|
@@ -88,35 +43,43 @@ A suíte foi ampliada para além dos cenários mínimos do desafio, cobrindo flu
 | FE-02 | Login com credenciais inválidas | Negativo |
 | FE-03 | Login com campos obrigatórios vazios | Validação |
 | FE-04 | Cadastro de usuário administrador | Positivo |
-| FE-05 | Cadastro com e-mail já utilizado | Negativo |
+| FE-05 | Cadastro com e-mail já utilizado | Regra de negócio |
 | FE-06 | Cadastro de produto | Positivo |
-| FE-07 | Cadastro de produto sem campos obrigatórios | Validação |
+| FE-07 | Validação dos campos obrigatórios de produto | Validação |
 | FE-08 | Logout | Sessão |
 | FE-09 | Acesso à listagem de produtos | Navegação |
 
-## API — 13 cenários
+### API — 25 cenários
 
 | ID | Cenário | Tipo |
 |---|---|---|
 | API-01 | Login com credenciais válidas | Positivo |
 | API-02 | Login com senha inválida | Negativo |
-| API-03 | Cadastro de usuário | Positivo |
+| API-03 | Cadastro de usuário | CRUD |
 | API-04 | Cadastro com e-mail duplicado | Negativo |
 | API-05 | Consulta de usuário por ID | Consulta |
 | API-06 | Atualização de usuário | CRUD |
 | API-07 | Exclusão de usuário | CRUD |
 | API-08 | Listagem de produtos | Consulta |
 | API-09 | Consulta de produto por ID | Consulta |
-| API-10 | Bloqueio de cadastro de produto para não administrador | Autorização |
+| API-10 | Bloqueio de produto para não administrador | Autorização |
 | API-11 | Cadastro de produto como administrador | CRUD |
 | API-12 | Atualização de produto | CRUD |
 | API-13 | Exclusão de produto | CRUD |
+| API-14 | Token ausente em operação protegida | Autenticação |
+| API-15 | Token inválido em operação protegida | Autenticação |
+| API-16 | Produto duplicado | Regra de negócio |
+| API-17 | Payload de produto incompleto | Payload inválido |
+| API-18 | Tipos incompatíveis no payload de produto | Contrato |
+| API-19 | Valores abaixo dos limites numéricos documentados | Boundary |
+| API-20 | Contrato da resposta de produtos | Contract |
+| API-21 | Contrato de autenticação e autorização | Contract |
+| API-22 | Isolamento entre massas de dados | Isolamento |
+| API-23 | Cleanup após exclusão | Integridade |
+| API-24 | Repetição do mesmo POST sem gerar duplicidade | Idempotência lógica |
+| API-25 | Contrato da resposta de usuários | Contract |
 
-**Total: 22 cenários automatizados.**
-
----
-
-# Arquitetura
+## Arquitetura
 
 ```text
 cypress/
@@ -124,355 +87,191 @@ cypress/
 │   ├── api/
 │   │   ├── authentication.cy.js
 │   │   ├── users.cy.js
-│   │   └── products.cy.js
-│   │
+│   │   ├── products.cy.js
+│   │   └── quality.cy.js
 │   └── frontend/
 │       ├── authentication.cy.js
 │       ├── users.cy.js
 │       └── products.cy.js
 │
-├── support/
-│   ├── clients/
-│   │   ├── auth.client.js
-│   │   ├── products.client.js
-│   │   └── users.client.js
-│   │
-│   ├── commands/
-│   │   ├── api.commands.js
-│   │   └── ui.commands.js
-│   │
-│   └── factories/
-│       ├── product.factory.js
-│       └── user.factory.js
-│
-└── fixtures/
+└── support/
+    ├── clients/
+    │   ├── auth.client.js
+    │   ├── users.client.js
+    │   └── products.client.js
+    ├── commands/
+    │   ├── api.commands.js
+    │   └── ui.commands.js
+    ├── factories/
+    │   ├── product.factory.js
+    │   └── user.factory.js
+    └── schemas/
+        ├── error.schema.js
+        ├── product.schema.js
+        ├── user.schema.js
+        └── validator.js
+
+ docs/
+ ├── architecture.md
+ ├── ci-strategy.md
+ ├── risk-matrix.md
+ ├── test-strategy.md
+ └── known-issues.md
 ```
 
-## Responsabilidade das camadas
+### Responsabilidades
 
-### Specs
+**Specs** — expressam o comportamento que está sendo validado.
 
-Contêm os cenários e as assertions relacionadas ao comportamento que está sendo validado.
+**API Clients** — encapsulam métodos, rotas, headers e configuração das requisições.
 
-Os testes são organizados por camada e domínio:
+**Commands** — concentram ações de UI/API que realmente são reutilizáveis.
+
+**Factories** — geram massa dinâmica e permitem `overrides` para boundary e negativos.
+
+**Schemas** — isolam o contrato esperado das respostas e evitam repetir validações estruturais nos testes.
+
+## Estratégia de qualidade
+
+A suíte não é apenas um conjunto de happy paths. A cobertura inclui:
+
+- autenticação válida e inválida;
+- autorização por perfil;
+- token ausente e inválido;
+- CRUD de usuários e produtos;
+- payload incompleto;
+- tipos incompatíveis;
+- boundary numérico;
+- duplicidade;
+- contratos de resposta;
+- isolamento de massa;
+- confirmação pós-exclusão;
+- prevenção de duplicidade em repetição de POST;
+- fluxos críticos de frontend.
+
+A matriz completa está em `docs/risk-matrix.md`.
+
+## Test pyramid
 
 ```text
-API
-├── authentication
-├── users
-└── products
-
-Frontend
-├── authentication
-├── users
-└── products
+             UI / E2E
+          poucos cenários
+                ▲
+                │
+        API / Contract
+      maior cobertura
+                ▲
+                │
+      Unit / Component
+          fora do escopo
 ```
 
-### API Clients
+Como o desafio não contém o código de produção do ServeRest, testes unitários/componentes não fazem parte deste projeto.
 
-Os clients encapsulam as operações específicas de cada domínio:
+## Massa e isolamento
 
-```text
-auth.client.js
-users.client.js
-products.client.js
-```
+As factories geram dados únicos. Isso reduz colisões em ambiente compartilhado e evita dependência de usuários fixos.
 
-Essa camada evita que os testes precisem conhecer detalhes de URL, método HTTP e estrutura de cada endpoint.
+Quando vários cenários compartilham uma pré-condição que não é alterada, ela pode ser preparada no `before()`. Cenários que alteram ou excluem um recurso devem preparar sua própria massa.
 
-Exemplo:
+A suíte também possui cenários específicos de isolamento e cleanup para tornar essa estratégia verificável.
 
-```javascript
-usersClient.create(user);
-```
+## Contratos e schemas
 
-em vez de repetir diretamente uma requisição HTTP dentro de cada cenário.
+Os contratos de produto e usuário estão em `cypress/support/schemas`.
 
-### Commands
+O `validator.js` implementa deliberadamente um subconjunto pequeno de regras de schema necessárias para este desafio:
 
-Os commands são utilizados somente para comportamentos realmente reutilizáveis.
+- tipos;
+- propriedades obrigatórias;
+- propriedades aninhadas;
+- arrays;
+- enum;
+- `minLength`.
 
-O `api.commands.js` disponibiliza a infraestrutura genérica:
+Isso evita adicionar uma dependência externa apenas para validar um contrato pequeno e deixa explícito o que a suíte realmente verifica.
 
-```javascript
-cy.apiRequest(...)
-```
+## HTTP status e regras do ServeRest
 
-Os clients utilizam esse comando para executar as requisições.
+A suíte valida os códigos observados/documentados para os comportamentos cobertos, incluindo `400`, `401` e `403`.
 
-Fluxo:
+O projeto não inventa expectativa de `409 Conflict` para duplicidade quando o ServeRest representa essa regra como `400`.
 
-```text
-Spec
-  ↓
-Client de domínio
-  ↓
-cy.apiRequest()
-  ↓
-cy.request()
-```
+Também não cria limites máximos de texto que não estejam respaldados pelo contrato exercitado.
 
-O `ui.commands.js` concentra ações reutilizáveis da interface, como autenticação.
+Detalhes e limitações estão em `docs/known-issues.md`.
 
-### Factories
+## Execução local
 
-As factories são responsáveis pela geração de massa de teste dinâmica:
-
-```text
-user.factory.js
-product.factory.js
-```
-
-Os dados recebem identificadores únicos para reduzir colisões em ambientes compartilhados.
-
----
-
-# Princípios adotados
-
-## Independência
-
-Cada cenário prepara a massa necessária para sua própria execução.
-
-Os testes não devem depender da ordem de execução de outros cenários.
-
-## Massa dinâmica
-
-Usuários e produtos são gerados com identificadores únicos.
-
-```text
-Factory
-   ↓
-Dados únicos
-   ↓
-Preparação do estado
-   ↓
-Execução do cenário
-   ↓
-Assertions
-```
-
-Essa abordagem reduz colisões e dependência de registros previamente existentes.
-
-## API + UI
-
-A API é utilizada para preparar estados de teste quando isso reduz o acoplamento da interface.
-
-Por exemplo, um usuário pode ser criado através da API antes que o fluxo de login seja validado pelo frontend.
-
-O comportamento pertencente à interface continua sendo validado através do fluxo E2E.
-
-## Reutilização
-
-A reutilização é aplicada através de:
-
-- API Clients;
-- Commands;
-- Factories;
-- configuração compartilhada do Cypress.
-
-As responsabilidades são mantidas separadas para evitar duplicação desnecessária.
-
-## Assertions
-
-As assertions são mantidas próximas ao comportamento validado.
-
-São considerados, conforme o cenário:
-
-- status HTTP;
-- payloads;
-- conteúdo das respostas;
-- elementos visíveis;
-- navegação;
-- resultado funcional;
-- comportamento de autorização.
-
-## Sincronização
-
-Não são utilizados `waits` fixos como estratégia de sincronização.
-
-Quando necessário, os testes utilizam intercepts e esperam requisições específicas:
-
-```javascript
-cy.intercept('POST', '**/produtos').as('createProduct');
-
-cy.wait('@createProduct');
-```
-
-Essa abordagem reduz a dependência de tempos arbitrários de execução.
-
----
-
-# API Testing
-
-As requisições são centralizadas através de `apiRequest` e dos clients de domínio.
-
-Exemplo:
-
-```javascript
-import { authClient } from '../../support/clients/auth.client';
-
-authClient.login(user.email, user.password)
-  .then((response) => {
-    expect(response.status).to.eq(200);
-    expect(response.body)
-      .to.include({
-        message: 'Login realizado com sucesso',
-      });
-  });
-```
-
-Os cenários validam tanto o **status HTTP** quanto os dados relevantes da resposta.
-
-Quando aplicável, também são realizadas validações posteriores para confirmar o efeito da operação.
-
-```text
-POST
- ↓
-Validação da resposta
- ↓
-GET
- ↓
-Validação do estado final
-```
-
-Isso permite validar não apenas a resposta imediata da API, mas também o resultado da operação.
-
----
-
-# Dados de teste
-
-Os testes não dependem de usuários fixos ou registros previamente existentes.
-
-As factories geram dados únicos durante a execução.
-
-Exemplo:
-
-```javascript
-const user = userFactory();
-```
-
-ou:
-
-```javascript
-const product = productFactory();
-```
-
-As factories também permitem sobrescrever propriedades quando necessário:
-
-```javascript
-const customer = customerFactory();
-```
-
-ou:
-
-```javascript
-const admin = userFactory({
-  administrador: 'true',
-});
-```
-
-Essa abordagem facilita a criação de diferentes perfis sem duplicar estruturas de dados.
-
----
-
-# Execução
-
-## Instalação
+Instalação limpa:
 
 ```bash
 npm ci
 ```
 
-## Cypress em modo interativo
+Modo interativo:
 
 ```bash
 npm run cy:open
 ```
 
-## Suíte completa
+Toda a suíte:
 
 ```bash
 npm test
 ```
 
-Executa todos os testes utilizando Chrome.
-
-## Somente API
+Somente API:
 
 ```bash
-npm run cy:run:api
+npm run test:api
 ```
 
-Executa os cenários localizados em:
-
-```text
-cypress/e2e/api/
-```
-
-## Somente Frontend
+Somente frontend:
 
 ```bash
-npm run cy:run:e2e
+npm run test:e2e
 ```
 
-Executa os cenários localizados em:
-
-```text
-cypress/e2e/frontend/
-```
-
-## Smoke test
+Smoke de autenticação:
 
 ```bash
 npm run test:smoke
 ```
 
-Executa os principais cenários de autenticação de frontend e API.
+Qualidade, contratos e negativos:
 
----
-
-# Configuração de ambiente
-
-Por padrão, o projeto utiliza:
-
-```text
-Frontend: https://front.serverest.dev
-API:      https://serverest.dev
+```bash
+npm run test:quality
 ```
 
-As URLs podem ser sobrescritas através de variáveis de ambiente.
+Alias para a camada de contratos:
+
+```bash
+npm run test:contract
+```
+
+## Configuração de ambiente
+
+Valores padrão:
+
+```text
+CYPRESS_BASE_URL=https://front.serverest.dev
+API_URL=https://serverest.dev
+API_MIN_INTERVAL_MS=1500
+```
 
 Exemplo:
 
 ```bash
-CYPRESS_BASE_URL=http://localhost:3000 \
-API_URL=http://localhost:3000 \
-npm test
+CYPRESS_BASE_URL=http://localhost:3000 API_URL=http://localhost:3000 npm test
 ```
 
-A URL da API é disponibilizada através de `Cypress.expose()`.
+O `API_MIN_INTERVAL_MS` controla o intervalo mínimo entre chamadas feitas pelo client de API. Em ambiente controlado, ele pode ser reduzido.
 
-Credenciais e tokens não devem ser armazenados como dados públicos de configuração.
+## CI/CD
 
----
-
-# Relatórios
-
-A execução utiliza:
-
-- **Mochawesome** para relatório funcional;
-- **JUnit** para integração com pipelines;
-- **screenshots** automáticos em falhas.
-
-Os relatórios e screenshots são gerados durante a execução e podem ser disponibilizados como artefatos do pipeline de CI.
-
----
-
-# CI/CD
-
-O projeto possui pipeline automatizado através do **GitHub Actions**.
-
-Fluxo:
+O workflow `.github/workflows/cypress.yml` roda em `push` e `pull_request`:
 
 ```text
 Checkout
@@ -481,172 +280,72 @@ Node.js 22
    ↓
 npm ci
    ↓
-Cypress
+Cypress / Chrome
    ↓
-Chrome
+Reports + Screenshots + Videos
    ↓
-Execução da suíte
-   ↓
-Reports / Screenshots
-   ↓
-Artifacts
+GitHub Actions Artifacts
 ```
 
-O workflow é executado em:
+O CI usa `API_MIN_INTERVAL_MS=2500` para reduzir chamadas concentradas no ambiente público.
 
-- `push`;
-- `pull_request`.
+Artefatos são preservados mesmo quando a execução falha.
 
-O pipeline utiliza `npm ci` para instalação determinística das dependências e executa a suíte principal através de:
+## Relatórios
 
-```bash
-npm test
-```
+- Mochawesome: relatório funcional;
+- JUnit: integração com CI;
+- screenshots: evidências de falhas;
+- vídeos: disponíveis quando habilitados/configurados.
 
-Em caso de falha, screenshots e relatórios disponíveis são preservados como artefatos.
+## Known issues do ambiente público
 
----
+O ServeRest público é compartilhado e pode retornar `429 Too Many Requests` quando detecta comportamento equivalente a teste de carga. Isso é uma limitação do ambiente, não uma regra funcional do produto.
 
-# Ambiente compartilhado
+A suíte reduz chamadas desnecessárias, reutiliza pré-condições estáveis dentro do spec e aplica `API_MIN_INTERVAL_MS`.
 
-O ServeRest online é um ambiente compartilhado e seus dados podem ser alterados por outros consumidores.
+Em um ambiente de teste controlado, o ideal seria utilizar dados isolados, reset controlado e observabilidade. O desafio atual permanece apontando para o ambiente público solicitado.
 
-Por isso, a suíte procura:
+## Transferência para Playwright
 
-- evitar IDs fixos;
-- utilizar massa dinâmica;
-- criar os estados necessários para os cenários;
-- evitar dependência entre execuções;
-- validar o resultado das operações realizadas.
+A arquitetura separa intenção de teste, clientes, dados e contratos. Em uma evolução para Playwright, esses papéis podem ser mapeados para:
 
-Essa estratégia reduz o acoplamento com o estado prévio do ambiente.
+- fixtures;
+- `APIRequestContext`;
+- Page Objects/locators;
+- builders/factories;
+- contratos compartilhados.
 
----
+A ideia é transportar a estratégia, não simplesmente converter a sintaxe Cypress para Playwright.
 
-# Decisões técnicas
-
-## Por que utilizar API para preparação de dados?
-
-A preparação de dados através da API evita utilizar a interface para operações que não fazem parte do comportamento que determinado teste precisa validar.
-
-Isso reduz:
-
-- tempo de execução;
-- acoplamento;
-- duplicação;
-- dependência de etapas de UI.
-
-O frontend continua responsável pela validação dos comportamentos que pertencem à interface.
-
-## Por que utilizar Factories?
-
-Factories centralizam a criação de massa de teste e facilitam a geração de dados únicos.
-
-Isso permite que os testes sejam executados de maneira independente e reduz colisões em ambientes compartilhados.
-
-## Por que utilizar API Clients?
-
-Os API Clients isolam detalhes técnicos das requisições.
-
-Por exemplo:
-
-```javascript
-usersClient.create(user);
-```
-
-é mais expressivo no cenário do que repetir:
-
-```javascript
-cy.request({
-  method: 'POST',
-  url: `${apiUrl}/usuarios`,
-  body: user,
-});
-```
-
-Além disso, mudanças na implementação dos endpoints podem ser concentradas nos clients.
-
-## Por que utilizar intercepts?
-
-Intercepts são utilizados quando o teste precisa sincronizar ou validar uma comunicação específica entre frontend e API.
-
-Isso evita dependência de tempos fixos:
-
-```javascript
-cy.wait(3000);
-```
-
-e favorece uma sincronização baseada no evento esperado:
-
-```javascript
-cy.wait('@createProduct');
-```
-
----
-
-# Resultado atual
-
-A suíte possui:
-
-```text
-Frontend:  9 cenários
-API:      13 cenários
-----------------------
-Total:    22 cenários
-```
-
-Os **22 cenários foram executados com sucesso localmente** após a refatoração da arquitetura.
-
----
-
-# Critérios atendidos
+## Critérios atendidos
 
 - [x] Frontend e API
-- [x] Cenários positivos e negativos
-- [x] Assertions relevantes
+- [x] Happy paths e cenários negativos
+- [x] Regras de negócio
+- [x] Autenticação e autorização
+- [x] Payloads inválidos
+- [x] Boundary testing
+- [x] Contratos/schemas
 - [x] Massa dinâmica
-- [x] Testes independentes
+- [x] Isolamento
+- [x] Cleanup validado onde aplicável
 - [x] API Clients
-- [x] Commands reutilizáveis
 - [x] Factories
-- [x] Seletores estáveis nos fluxos validados
-- [x] Sincronização sem sleeps arbitrários
-- [x] Estrutura organizada
+- [x] Estrutura por domínio
 - [x] Relatórios
 - [x] CI/CD
-- [x] Execução em Chrome
-- [x] Node.js 22
-- [x] 22 cenários automatizados
-- [x] Execução local validada
+- [x] Matriz de riscos
+- [x] Estratégia de testes
+- [x] Arquitetura documentada
+- [x] Known issues
 
----
+## Validação antes da entrega
 
-# Estrutura de execução
+A versão entregue contém a suíte completa e a documentação. O resultado de execução deve ser confirmado no ambiente alvo antes do commit final.
 
-A arquitetura foi pensada para permitir evolução da suíte sem concentrar toda a lógica nos arquivos de teste.
-
-```text
-                    ┌──────────────────┐
-                    │      Specs       │
-                    └────────┬─────────┘
-                             │
-              ┌──────────────┴──────────────┐
-              │                             │
-              ▼                             ▼
-       Frontend Commands              API Clients
-              │                             │
-              │                       apiRequest
-              │                             │
-              ▼                             ▼
-         Aplicação UI                  REST API
-```
-
-Essa separação facilita manutenção, reutilização e evolução futura da automação.
-
----
+Não considerar uma execução como 100% aprovada apenas porque o código está presente: a evidência de execução do CI/local é o critério final.
 
 ## Autor
 
-**Marcus Vinicius B de Souza**
-
-QA Automation Engineer
+Marcus Vinicius B de Souza
